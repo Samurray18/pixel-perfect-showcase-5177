@@ -14,16 +14,206 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      denominations: {
+        Row: {
+          id: string
+          in_stock: boolean
+          label: string
+          price_dzd: number
+          product_id: string
+          provider_product_id: string | null
+          provider_unit_price: number | null
+          sort: number
+        }
+        Insert: {
+          id?: string
+          in_stock?: boolean
+          label: string
+          price_dzd: number
+          product_id: string
+          provider_product_id?: string | null
+          provider_unit_price?: number | null
+          sort?: number
+        }
+        Update: {
+          id?: string
+          in_stock?: boolean
+          label?: string
+          price_dzd?: number
+          product_id?: string
+          provider_product_id?: string | null
+          provider_unit_price?: number | null
+          sort?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "denominations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          amount_dzd: number
+          checkout_id: string | null
+          code_encrypted: string | null
+          created_at: string
+          customer_name: string
+          denomination_id: string | null
+          denomination_label: string
+          email: string
+          fulfilled_at: string | null
+          fulfillment_error: string | null
+          fulfillment_status: string
+          id: string
+          order_number: string
+          paid_at: string | null
+          payment_method: string
+          payment_status: string
+          phone: string
+          product_id: string | null
+          product_name: string
+        }
+        Insert: {
+          amount_dzd: number
+          checkout_id?: string | null
+          code_encrypted?: string | null
+          created_at?: string
+          customer_name: string
+          denomination_id?: string | null
+          denomination_label: string
+          email: string
+          fulfilled_at?: string | null
+          fulfillment_error?: string | null
+          fulfillment_status?: string
+          id?: string
+          order_number: string
+          paid_at?: string | null
+          payment_method: string
+          payment_status?: string
+          phone: string
+          product_id?: string | null
+          product_name: string
+        }
+        Update: {
+          amount_dzd?: number
+          checkout_id?: string | null
+          code_encrypted?: string | null
+          created_at?: string
+          customer_name?: string
+          denomination_id?: string | null
+          denomination_label?: string
+          email?: string
+          fulfilled_at?: string | null
+          fulfillment_error?: string | null
+          fulfillment_status?: string
+          id?: string
+          order_number?: string
+          paid_at?: string | null
+          payment_method?: string
+          payment_status?: string
+          phone?: string
+          product_id?: string | null
+          product_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_denomination_id_fkey"
+            columns: ["denomination_id"]
+            isOneToOne: false
+            referencedRelation: "denominations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          brand: string
+          category: string
+          created_at: string
+          description_ar: string
+          description_fr: string
+          featured: boolean
+          id: string
+          in_stock: boolean
+          name: string
+          popularity: number
+          slug: string
+          theme: string
+        }
+        Insert: {
+          brand: string
+          category: string
+          created_at?: string
+          description_ar?: string
+          description_fr?: string
+          featured?: boolean
+          id?: string
+          in_stock?: boolean
+          name: string
+          popularity?: number
+          slug: string
+          theme?: string
+        }
+        Update: {
+          brand?: string
+          category?: string
+          created_at?: string
+          description_ar?: string
+          description_fr?: string
+          featured?: boolean
+          id?: string
+          in_stock?: boolean
+          name?: string
+          popularity?: number
+          slug?: string
+          theme?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +340,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
