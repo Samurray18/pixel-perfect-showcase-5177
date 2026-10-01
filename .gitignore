@@ -16,6 +16,14 @@ dist-ssr
 .nitro
 *.local
 
+# Local secret backups
+.env.bak
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
