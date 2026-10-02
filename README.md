@@ -1,26 +1,27 @@
-# Pixel Perfect Replication
+# ch7nli — Gift cards & game top-ups (Algeria)
 
-Implement exactly the screenshot and nothing else
+Storefront (FR/AR, RTL), checkout via Chargily Pay (Edahabia/CIB), automatic fulfillment via Reloadly, encrypted code storage, Resend emails, and an admin at `/admin`.
 
-This project was built with [Lovable](https://lovable.dev).
+## Environment variables (server secrets)
+| Name | Purpose |
+|---|---|
+| `CODES_ENCRYPTION_KEY` | AES-GCM key for delivered codes (already generated) |
+| `CHARGILY_SECRET_KEY` | `test_sk_…` or `live_sk_…`. Without it, orders run in test mode with a "simulate payment" button |
+| `RELOADLY_CLIENT_ID` / `RELOADLY_CLIENT_SECRET` | Reloadly gift-card API. Without them, a mock provider issues `TEST-…` codes |
+| `RELOADLY_SANDBOX` | `false` for production Reloadly (default sandbox) |
+| `RESEND_API_KEY`, `RESEND_FROM` | Code emails (optional) |
 
-**Live app**: https://pixel-perfect-showcase-5177.lovable.app
+## Chargily webhook
+Set the webhook URL in Chargily to `https://<your-domain>/api/public/chargily-webhook`.
 
-## Build with Lovable
+## Reloadly mapping
+In `/admin → Produits`, fill each denomination's Reloadly product ID and unit price.
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/d5534335-9fb4-4d98-ac18-f19fce8d6409).
+## Admin
+The first account created at `/admin` becomes admin automatically.
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+## Code layout
+- `src/lib/server/payments.server.ts` — Chargily
+- `src/lib/server/fulfillment.server.ts` — `FulfillmentProvider` interface (Reloadly + mock)
+- `src/lib/server/orders.server.ts` — pay → fulfill → encrypt → email
+- `src/lib/orders.functions.ts` — server functions used by the UI

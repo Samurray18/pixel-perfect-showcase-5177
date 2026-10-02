@@ -14,9 +14,9 @@ export async function encryptCode(plain: string) {
 }
 
 export async function decryptCode(enc: string) {
-  const [iv, ct] = enc.split(".");
+  const [iv = "", ct = ""] = enc.split(".");
   const pt = await crypto.subtle.decrypt(
-    { name: "AES-GCM", iv: Buffer.from(iv, "base64") }, await getKey(), Buffer.from(ct, "base64"),
+    { name: "AES-GCM", iv: new Uint8Array(Buffer.from(iv, "base64")) }, await getKey(), new Uint8Array(Buffer.from(ct, "base64")),
   );
   return new TextDecoder().decode(pt);
 }
