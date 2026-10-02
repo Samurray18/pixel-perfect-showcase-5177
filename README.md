@@ -1,29 +1,27 @@
-# Welcome to your Lovable project
+# ch7nli — Gift cards & game top-ups (Algeria)
 
-This project was built with [Lovable](https://lovable.dev).
+Storefront (FR/AR, RTL), checkout via Chargily Pay (Edahabia/CIB), automatic fulfillment via Reloadly, encrypted code storage, Resend emails, and an admin at `/admin`.
 
-## Build with Lovable
+## Environment variables (server secrets)
+| Name | Purpose |
+|---|---|
+| `CODES_ENCRYPTION_KEY` | AES-GCM key for delivered codes (already generated) |
+| `CHARGILY_SECRET_KEY` | `test_sk_…` or `live_sk_…`. Without it, orders run in test mode with a "simulate payment" button |
+| `RELOADLY_CLIENT_ID` / `RELOADLY_CLIENT_SECRET` | Reloadly gift-card API. Without them, a mock provider issues `TEST-…` codes |
+| `RELOADLY_SANDBOX` | `false` for production Reloadly (default sandbox) |
+| `RESEND_API_KEY`, `RESEND_FROM` | Code emails (optional) |
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+## Chargily webhook
+Set the webhook URL in Chargily to `https://<your-domain>/api/public/chargily-webhook`.
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+## Reloadly mapping
+In `/admin → Produits`, fill each denomination's Reloadly product ID and unit price.
 
-## Development
+## Admin
+The first account created at `/admin` becomes admin automatically.
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
-
-## Built with
-
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+## Code layout
+- `src/lib/server/payments.server.ts` — Chargily
+- `src/lib/server/fulfillment.server.ts` — `FulfillmentProvider` interface (Reloadly + mock)
+- `src/lib/server/orders.server.ts` — pay → fulfill → encrypt → email
+- `src/lib/orders.functions.ts` — server functions used by the UI
