@@ -43,5 +43,5 @@ export type SyncResult = {
   createdDenominations: number;
   updatedDenominations: number;
   unmapped: { product: string; reason: string }[];
-  preview: { product: string; slug: string; country: string; denominations: string[] }[];
+  preview: { product: string; slug: string; country: string; adopted: boolean; denominations: string[] }[];
 };

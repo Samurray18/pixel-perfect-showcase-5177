@@ -36,7 +36,8 @@ export function explainDbError(e: { message: string; code?: string | null } | nu
     return "Missing table. Apply the initial migrations in supabase/migrations first.";
   }
   if (code === "23505" || /duplicate key value/i.test(msg)) {
-    return "A row with this provider id or slug already exists. Try a different country.";
+    const which = /slug/i.test(msg) ? "slug" : "provider id";
+    return `A product with this ${which} already exists (${msg.trim()}). Rename or remove the existing row, or pick another country.`;
   }
   return msg;
 }
@@ -168,25 +169,45 @@ async function importProduct(
     return;
   }
 
-  const { data: existing } = await supabaseAdmin
+  const bareSlug = slugify(item.productName);
+  const countrySlug = `${bareSlug}-${country.toLowerCase()}`;
+
+  const { data: byProvider } = await supabaseAdmin
     .from("products")
     .select("id,slug")
     .eq("provider_product_id", providerId)
     .maybeSingle();
 
-  const productId = existing?.id ?? null;
-  const slug = existing?.slug ?? `${slugify(item.productName)}-${country.toLowerCase()}`;
+  // Products created by hand have no provider id, so fall back to slug matching
+  // to adopt and enrich them. Guarding on provider_product_id IS NULL keeps a
+  // second Reloadly product from stealing an already-linked row.
+  let matched = byProvider ?? null;
+  if (!matched) {
+    const { data: bySlug } = await supabaseAdmin
+      .from("products")
+      .select("id,slug")
+      .is("provider_product_id", null)
+      .in("slug", [bareSlug, countrySlug])
+      .limit(1)
+      .maybeSingle();
+    matched = bySlug ?? null;
+  }
+
+  const productId = matched?.id ?? null;
+  const slug = matched?.slug ?? countrySlug;
+  const adoptedBySlug = !byProvider && Boolean(matched);
 
   result.preview.push({
     product: item.productName,
     slug,
     country,
+    adopted: Boolean(matched),
     denominations: denominations.map((d) => `${d.label} → ${d.price_dzd} DZD`),
   });
   if (opts.dryRun) return;
 
   const productRow = {
-    slug: existing?.slug ?? `${slugify(item.productName)}-${country.toLowerCase()}`,
+    slug,
     provider_product_id: providerId,
     provider_brand_id: item.brand?.brandId ?? null,
     name: item.productName,
@@ -194,20 +215,26 @@ async function importProduct(
     category: brand.category,
     logo_url: item.logoUrls?.[0] ?? null,
     country_code: country,
-    in_stock: opts.publish,
     provider_synced_at: new Date().toISOString(),
-    ...(productId ? {} : { theme: brand.theme, description_fr: "", description_ar: "" }),
+    // in_stock only applies to rows we create; an adopted product keeps the
+    // stock state the operator already set.
+    ...(productId
+      ? {}
+      : { theme: brand.theme, description_fr: "", description_ar: "", in_stock: opts.publish }),
   };
 
-  const { data: saved, error } = await supabaseAdmin
-    .from("products")
-    .upsert(productRow, { onConflict: "provider_product_id" })
-    .select("id")
-    .single();
+  // An adopted row already exists, so update it by id. Upserting on
+  // provider_product_id would attempt an insert and collide on the unique
+  // slug index instead.
+  const table = supabaseAdmin.from("products");
+  const write = productId
+    ? table.update(productRow).eq("id", productId)
+    : table.upsert(productRow, { onConflict: "provider_product_id" });
+  const { data: saved, error } = await write.select("id").single();
   if (error || !saved) {
     result.unmapped.push({
       product: item.productName,
-      reason: `product upsert failed: ${explainDbError(error)}`,
+      reason: `${adoptedBySlug ? "adopt" : "upsert"} of "${slug}" failed: ${explainDbError(error)}`,
     });
     return;
   }

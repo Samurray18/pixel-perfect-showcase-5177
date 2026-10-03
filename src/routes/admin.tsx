@@ -392,7 +392,7 @@ function SyncResult({ r }: { r: SyncResult }) {
         <div className="overflow-x-auto rounded-xl border">
           <table className="w-full text-sm">
             <thead className="bg-card text-xs uppercase text-muted-foreground">
-              <tr><th className="p-3 text-start">Produit</th><th className="p-3 text-start">Slug</th><th className="p-3 text-start">Pays</th><th className="p-3 text-start">Montants</th></tr>
+              <tr><th className="p-3 text-start">Produit</th><th className="p-3 text-start">Slug</th><th className="p-3 text-start">Pays</th><th className="p-3 text-start">Action</th><th className="p-3 text-start">Montants</th></tr>
             </thead>
             <tbody>
               {r.preview.map((p) => (
@@ -400,6 +400,11 @@ function SyncResult({ r }: { r: SyncResult }) {
                   <td className="p-3 font-bold">{p.product}</td>
                   <td className="p-3 font-mono text-xs">{p.slug}</td>
                   <td className="p-3">{p.country}</td>
+                  <td className="p-3">
+                    <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${p.adopted ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
+                      {p.adopted ? "adopte un produit existant" : "nouveau produit"}
+                    </span>
+                  </td>
                   <td className="p-3 text-muted-foreground">{p.denominations.join(", ")}</td>
                 </tr>
               ))}
