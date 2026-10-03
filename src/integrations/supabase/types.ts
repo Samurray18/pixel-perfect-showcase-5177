@@ -16,7 +16,6 @@ export type Database = {
     Tables: {
       denominations: {
         Row: {
-          currency_code: string | null
           id: string
           in_stock: boolean
           label: string
@@ -24,11 +23,9 @@ export type Database = {
           product_id: string
           provider_product_id: string | null
           provider_unit_price: number | null
-          recipient_amount: number | null
           sort: number
         }
         Insert: {
-          currency_code?: string | null
           id?: string
           in_stock?: boolean
           label: string
@@ -36,11 +33,9 @@ export type Database = {
           product_id: string
           provider_product_id?: string | null
           provider_unit_price?: number | null
-          recipient_amount?: number | null
           sort?: number
         }
         Update: {
-          currency_code?: string | null
           id?: string
           in_stock?: boolean
           label?: string
@@ -48,7 +43,6 @@ export type Database = {
           product_id?: string
           provider_product_id?: string | null
           provider_unit_price?: number | null
-          recipient_amount?: number | null
           sort?: number
         }
         Relationships: [
@@ -146,57 +140,42 @@ export type Database = {
         Row: {
           brand: string
           category: string
-          country_code: string | null
           created_at: string
           description_ar: string
           description_fr: string
           featured: boolean
           id: string
           in_stock: boolean
-          logo_url: string | null
           name: string
           popularity: number
-          provider_brand_id: number | null
-          provider_product_id: string | null
-          provider_synced_at: string | null
           slug: string
           theme: string
         }
         Insert: {
           brand: string
           category: string
-          country_code?: string | null
           created_at?: string
           description_ar?: string
           description_fr?: string
           featured?: boolean
           id?: string
           in_stock?: boolean
-          logo_url?: string | null
           name: string
           popularity?: number
-          provider_brand_id?: number | null
-          provider_product_id?: string | null
-          provider_synced_at?: string | null
           slug: string
           theme?: string
         }
         Update: {
           brand?: string
           category?: string
-          country_code?: string | null
           created_at?: string
           description_ar?: string
           description_fr?: string
           featured?: boolean
           id?: string
           in_stock?: boolean
-          logo_url?: string | null
           name?: string
           popularity?: number
-          provider_brand_id?: number | null
-          provider_product_id?: string | null
-          provider_synced_at?: string | null
           slug?: string
           theme?: string
         }
