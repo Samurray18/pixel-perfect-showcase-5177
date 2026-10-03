@@ -9,7 +9,7 @@ export function ProductCard({ p }: { p: Product }) {
   return (
     <Link to="/products/$slug" params={{ slug: p.slug }}
       className="group flex flex-col gap-3 rounded-2xl border bg-card p-3 transition hover:-translate-y-1 hover:border-primary hover:glow">
-      <BrandTile theme={p.theme} brand={p.brand} className="aspect-[16/10]" />
+      <BrandTile theme={p.theme} brand={p.brand} logoUrl={p.logo_url} className="aspect-[16/10]" />
       <div className="flex items-center justify-between gap-2 px-1">
         <h3 className="font-display text-base font-semibold">{p.name}</h3>
         <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-semibold text-primary">

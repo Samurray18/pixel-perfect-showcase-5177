@@ -28,6 +28,9 @@ export type SyncOptions = {
   margin: number;
   overwritePrices: boolean;
   dryRun: boolean;
+  // New products are created unpublished so you can set your own retail price
+  // before they appear in the storefront.
+  publish: boolean;
 };
 
 export type SyncResult = {

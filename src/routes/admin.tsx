@@ -6,7 +6,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/site/SiteShell";
 import { adminFulfill, adminRevealCode, claimFirstAdmin } from "@/lib/orders.functions";
-import { syncReloadly } from "@/lib/sync.functions";
+import { applyMarkup, syncReloadly } from "@/lib/sync.functions";
 import { BRANDS, type SyncBrand, type SyncResult } from "@/lib/sync-brands";
 import { formatDZD } from "@/lib/i18n";
 
@@ -87,6 +87,8 @@ function Dashboard() {
   const [tab, setTab] = useState<"orders" | "products" | "sync">("orders");
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Prod[]>([]);
+  const [rate, setRate] = useState("150");
+  const [markup, setMarkup] = useState("1.15");
   const fulfill = useServerFn(adminFulfill);
   const reveal = useServerFn(adminRevealCode);
 
@@ -117,7 +119,7 @@ function Dashboard() {
       </div>
       <div className="mb-4 inline-flex rounded-full border p-1">
         {(["orders", "products", "sync"] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} className={`rounded-full px-4 py-1.5 text-sm font-bold ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{t === "orders" ? "Commandes" : t === "products" ? "Produits" : "Sync Reloadly"}</button>
+          <button key={t} onClick={() => setTab(t)} className={`rounded-full px-4 py-1.5 text-sm font-bold ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>{t === "orders" ? "Commandes" : t === "products" ? "Produits" : "Sync from Reloadly"}</button>
         ))}
       </div>
 
@@ -151,7 +153,7 @@ function Dashboard() {
             </tbody>
           </table>
         </div>
-      ) : tab === "products" ? <Products products={products} reload={load} /> : <SyncPanel />}
+      ) : tab === "products" ? <Products products={products} reload={load} rate={Number(rate)} markup={Number(markup)} /> : <SyncPanel rate={rate} setRate={setRate} markup={markup} setMarkup={setMarkup} />}
     </div>
   );
 }
@@ -164,8 +166,18 @@ function Pill({ s }: { s: string }) {
   return <span className={`rounded-full px-2 py-0.5 text-xs font-bold ${c}`}>{s}</span>;
 }
 
-function Products({ products, reload }: { products: Prod[]; reload: () => void }) {
+function Products({ products, reload, rate, markup }: { products: Prod[]; reload: () => void; rate: number; markup: number }) {
+  const price = useServerFn(applyMarkup);
   const run = async (p: PromiseLike<{ error: unknown }>) => { const { error } = await p; if (error) toast.error("Erreur"); reload(); };
+  const applyToProduct = async (p: Prod) => {
+    try {
+      const r = await price({ data: { dzdRate: rate, markup, productId: p.id } });
+      toast.success(`${r.updated} prix de vente recalculés sur ${p.name}`);
+      reload();
+    } catch (e) {
+      toast.error((e as Error).message);
+    }
+  };
   const addProduct = async () => {
     const name = prompt("Nom du produit"); if (!name) return;
     const brand = prompt("Marque", name) ?? name;
@@ -175,6 +187,17 @@ function Products({ products, reload }: { products: Prod[]; reload: () => void }
   return (
     <div className="space-y-4">
       <button onClick={addProduct} className="rounded-full bg-primary px-5 py-2 text-sm font-bold text-primary-foreground">+ Produit</button>
+      <button
+        className="rounded-full border px-5 py-2 text-sm font-bold"
+        onClick={async () => {
+          const drafts = products.filter((p) => !p.in_stock);
+          if (!drafts.length) { toast.error("Tous les produits sont déjà publiés"); return; }
+          if (!confirm(`Publier ${drafts.length} produit(s) en boutique ?`)) return;
+          await run(supabase.from("products").update({ in_stock: true }).in("id", drafts.map((p) => p.id)));
+        }}
+      >
+        Publier tous les brouillons
+      </button>
       {products.map((p) => (
         <div key={p.id} className="rounded-xl border bg-card p-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -182,6 +205,9 @@ function Products({ products, reload }: { products: Prod[]; reload: () => void }
             <span className="text-xs text-muted-foreground">{p.category}</span>
             <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={p.in_stock} onChange={(e) => run(supabase.from("products").update({ in_stock: e.target.checked }).eq("id", p.id))} /> En stock</label>
             <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={p.featured} onChange={(e) => run(supabase.from("products").update({ featured: e.target.checked }).eq("id", p.id))} /> Vedette</label>
+            {p.denominations.some((d) => d.provider_unit_price != null) && (
+              <button className="text-xs underline" onClick={() => applyToProduct(p)}>Appliquer la marge</button>
+            )}
             <button className="ms-auto text-xs text-destructive underline" onClick={() => confirm(`Supprimer ${p.name} ?`) && run(supabase.from("products").delete().eq("id", p.id))}>Supprimer</button>
           </div>
           <div className="mt-3 space-y-2">
@@ -191,6 +217,7 @@ function Products({ products, reload }: { products: Prod[]; reload: () => void }
                 <input type="number" className="w-28 rounded border bg-transparent px-2 py-1" defaultValue={d.price_dzd} onBlur={(e) => run(supabase.from("denominations").update({ price_dzd: Number(e.target.value) }).eq("id", d.id))} /> DA
                 <input placeholder="Reloadly ID" className="w-28 rounded border bg-transparent px-2 py-1" defaultValue={d.provider_product_id ?? ""} onBlur={(e) => run(supabase.from("denominations").update({ provider_product_id: e.target.value || null }).eq("id", d.id))} />
                 <input placeholder="Prix unitaire" type="number" step="0.01" className="w-28 rounded border bg-transparent px-2 py-1" defaultValue={d.provider_unit_price ?? ""} onBlur={(e) => run(supabase.from("denominations").update({ provider_unit_price: e.target.value ? Number(e.target.value) : null }).eq("id", d.id))} />
+                {d.provider_unit_price != null && <WholesaleBadge cost={Number(d.provider_unit_price)} retail={d.price_dzd} rate={rate} />}
                 <label className="flex items-center gap-1 text-xs"><input type="checkbox" checked={d.in_stock} onChange={(e) => run(supabase.from("denominations").update({ in_stock: e.target.checked }).eq("id", d.id))} /> Stock</label>
                 <button className="text-xs text-destructive" onClick={() => run(supabase.from("denominations").delete().eq("id", d.id))}>✕</button>
               </div>
@@ -208,15 +235,34 @@ function Products({ products, reload }: { products: Prod[]; reload: () => void }
 
 const COUNTRIES = ["DZ", "TN", "MA", "FR", "US", "GB", "DE", "TR", "AE", "SA", "EG"];
 
-function SyncPanel() {
+// Shows what the card actually costs us in DZD and flags retail priced at or
+// below cost, which is the mistake that silently loses money on every order.
+function WholesaleBadge({ cost, retail, rate }: { cost: number; retail: number; rate: number }) {
+  if (!Number.isFinite(cost) || cost <= 0 || !Number.isFinite(rate) || rate <= 0) return null;
+  const costDzd = cost * rate;
+  const belowCost = retail <= costDzd;
+  const pct = costDzd > 0 ? Math.round(((retail - costDzd) / costDzd) * 100) : 0;
+  return (
+    <span
+      title={`Coût Reloadly ${cost} × ${rate} DZD = ${Math.round(costDzd)} DZD`}
+      className={`rounded-full px-2 py-0.5 text-[11px] font-bold ${belowCost ? "bg-destructive/15 text-destructive" : "bg-success/15 text-success"}`}
+    >
+      {belowCost ? `sous le coût (${formatDZD(Math.round(costDzd))})` : `marge ${pct}% · coût ${formatDZD(Math.round(costDzd))}`}
+    </span>
+  );
+}
+
+function SyncPanel({ rate, setRate, markup, setMarkup }: { rate: string; setRate: (v: string) => void; markup: string; setMarkup: (v: string) => void }) {
   const run = useServerFn(syncReloadly);
+  const price = useServerFn(applyMarkup);
   const [brands, setBrands] = useState<SyncBrand[]>(["steam"]);
   const [country, setCountry] = useState("DZ");
-  const [rate, setRate] = useState("150");
-  const [margin, setMargin] = useState("1.15");
   const [overwrite, setOverwrite] = useState(false);
   const [dryRun, setDryRun] = useState(true);
+  const [publish, setPublish] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [pricing, setPricing] = useState(false);
+  const [priced, setPriced] = useState<{ scanned: number; updated: number } | null>(null);
   const [result, setResult] = useState<SyncResult | null>(null);
   const field = "rounded-lg border bg-input/30 px-3 py-2 text-sm";
 
@@ -227,7 +273,8 @@ function SyncPanel() {
       <div className="rounded-xl border bg-card p-4">
         <p className="text-sm text-muted-foreground">
           Importe <code>GET /products</code> de Reloadly et crée ou met à jour les produits et leurs montants.
-          Les prix sont calculés à partir du montant en devise d&apos;expéditeur (ce que Reloadly nous facture).
+          Le prix de gros (<code>provider_unit_price</code>) est repris tel quel ; le prix de vente affiché en boutique
+          est calculé à partir du coût, du taux DZD et de la marge que vous choisissez.
         </p>
       </div>
 
@@ -255,8 +302,8 @@ function SyncPanel() {
           <input className={field} type="number" min="0" step="0.01" value={rate} onChange={(e) => setRate(e.target.value)} />
         </label>
         <label className="flex flex-col gap-1 text-sm font-semibold">
-          Marge
-          <input className={field} type="number" min="1" step="0.01" value={margin} onChange={(e) => setMargin(e.target.value)} />
+          Marge (multiplicateur)
+          <input className={field} type="number" min="1" step="0.01" value={markup} onChange={(e) => setMarkup(e.target.value)} />
         </label>
       </div>
 
@@ -269,25 +316,55 @@ function SyncPanel() {
           <input type="checkbox" checked={overwrite} onChange={(e) => setOverwrite(e.target.checked)} />
           Écraser les prix DZD existants
         </label>
+        <label className="flex items-center gap-2">
+          <input type="checkbox" checked={publish} onChange={(e) => setPublish(e.target.checked)} />
+          Publier immédiatement en boutique (sinon les produits sont créés en brouillon)
+        </label>
       </div>
 
-      <button
-        disabled={busy || !brands.length}
-        onClick={async () => {
-          setBusy(true);
-          setResult(null);
-          try {
-            setResult(await run({ data: { brands, countryCode: country, dzdRate: Number(rate), margin: Number(margin), overwritePrices: overwrite, dryRun } }));
-          } catch (e) {
-            toast.error((e as Error).message);
-          }
-          setBusy(false);
-        }}
-        className="rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
-      >
-        {busy ? "Synchronisation…" : dryRun ? "Prévisualiser" : "Synchroniser"}
-      </button>
+      <div className="flex flex-wrap items-center gap-3">
+        <button
+          disabled={busy || !brands.length}
+          onClick={async () => {
+            setBusy(true);
+            setResult(null);
+            try {
+              setResult(await run({ data: { brands, countryCode: country, dzdRate: Number(rate), margin: Number(markup), overwritePrices: overwrite, dryRun, publish } }));
+            } catch (e) {
+              toast.error((e as Error).message);
+            }
+            setBusy(false);
+          }}
+          className="rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground disabled:opacity-50"
+        >
+          {busy ? "Synchronisation…" : dryRun ? "Prévisualiser l’import" : "Sync from Reloadly"}
+        </button>
+
+        <button
+          disabled={pricing}
+          onClick={async () => {
+            setPricing(true);
+            setPriced(null);
+            try {
+              const r = await price({ data: { dzdRate: Number(rate), markup: Number(markup) } });
+              setPriced(r);
+              toast.success(`${r.updated} prix de vente mis à jour`);
+            } catch (e) {
+              toast.error((e as Error).message);
+            }
+            setPricing(false);
+          }}
+          className="rounded-full border px-5 py-2.5 text-sm font-bold disabled:opacity-50"
+        >
+          {pricing ? "Calcul…" : "Appliquer la marge aux prix de vente"}
+        </button>
+      </div>
       {!dryRun && <p className="text-xs text-warning">Attention : cette exécution écrit immédiatement en base.</p>}
+      {priced && (
+        <p className="text-xs text-muted-foreground">
+          {priced.scanned} montants synchronisés analysés, {priced.updated} prix de vente recalculés sur le prix de gros.
+        </p>
+      )}
 
       {result && <SyncResult r={result} />}
     </div>

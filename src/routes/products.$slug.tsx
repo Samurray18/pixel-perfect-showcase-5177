@@ -39,7 +39,7 @@ function ProductPage() {
   return (
     <SiteShell>
       <div className="mx-auto grid max-w-6xl gap-10 px-4 py-10 md:grid-cols-2">
-        <BrandTile theme={p.theme} brand={p.brand} big className="aspect-[4/3] glow" />
+        <BrandTile theme={p.theme} brand={p.brand} logoUrl={p.logo_url} big className="aspect-[4/3] glow" />
         <div>
           <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-3 py-1 text-xs font-bold text-primary"><Zap className="h-3 w-3" />{t("instant")}</span>
           <h1 className="mt-4 text-4xl font-black sm:text-5xl">{p.name}</h1>

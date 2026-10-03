@@ -23,6 +23,24 @@ type ReloadlyProduct = {
 
 export type SyncBrandKey = SyncBrand;
 
+// Surfaces the most likely cause instead of a raw Postgres error: the sync
+// migration not being applied yet.
+export function explainDbError(e: { message: string; code?: string | null } | null) {
+  if (!e) return "unknown error";
+  const code = e.code ?? "";
+  const msg = e.message ?? "";
+  if (code === "42703" || code === "PGRST204" || /column .* (does not exist|not found)/i.test(msg)) {
+    return "Missing columns. Apply supabase/migrations/20261002120000_reloadly_catalog_sync.sql first (supabase db push), then retry.";
+  }
+  if (code === "42P01" || /relation .* does not exist/i.test(msg)) {
+    return "Missing table. Apply the initial migrations in supabase/migrations first.";
+  }
+  if (code === "23505" || /duplicate key value/i.test(msg)) {
+    return "A row with this provider id or slug already exists. Try a different country.";
+  }
+  return msg;
+}
+
 function slugify(value: string) {
   return value
     .normalize("NFD")
@@ -176,7 +194,7 @@ async function importProduct(
     category: brand.category,
     logo_url: item.logoUrls?.[0] ?? null,
     country_code: country,
-    in_stock: true,
+    in_stock: opts.publish,
     provider_synced_at: new Date().toISOString(),
     ...(productId ? {} : { theme: brand.theme, description_fr: "", description_ar: "" }),
   };
@@ -189,7 +207,7 @@ async function importProduct(
   if (error || !saved) {
     result.unmapped.push({
       product: item.productName,
-      reason: `product upsert failed: ${error?.message ?? "unknown"}`,
+      reason: `product upsert failed: ${explainDbError(error)}`,
     });
     return;
   }
@@ -210,7 +228,7 @@ async function importProduct(
     if (denomError) {
       result.unmapped.push({
         product: item.productName,
-        reason: `${denom.label}: ${denomError.message}`,
+        reason: `${denom.label}: ${explainDbError(denomError)}`,
       });
       continue;
     }
