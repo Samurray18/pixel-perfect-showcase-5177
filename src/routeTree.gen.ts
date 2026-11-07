@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as SnapplusRouteImport } from './routes/snapplus'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as OrderOrderNumberRouteImport } from './routes/order.$orderNumber'
 import { Route as ProductsIndexRouteImport } from './routes/products.index'
@@ -31,6 +32,11 @@ const AdminRoute = AdminRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SnapplusRoute = SnapplusRouteImport.update({
+  id: '/snapplus',
+  path: '/snapplus',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TrackRoute = TrackRouteImport.update({
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/checkout': typeof CheckoutRoute
+  '/snapplus': typeof SnapplusRoute
   '/track': typeof TrackRoute
   '/order/$orderNumber': typeof OrderOrderNumberRoute
   '/products/$slug': typeof ProductsSlugRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/checkout': typeof CheckoutRoute
+  '/snapplus': typeof SnapplusRoute
   '/track': typeof TrackRoute
   '/order/$orderNumber': typeof OrderOrderNumberRoute
   '/products/$slug': typeof ProductsSlugRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/checkout': typeof CheckoutRoute
+  '/snapplus': typeof SnapplusRoute
   '/track': typeof TrackRoute
   '/order/$orderNumber': typeof OrderOrderNumberRoute
   '/products/$slug': typeof ProductsSlugRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/checkout'
+    | '/snapplus'
     | '/track'
     | '/order/$orderNumber'
     | '/products/$slug'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/checkout'
+    | '/snapplus'
     | '/track'
     | '/order/$orderNumber'
     | '/products/$slug'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/checkout'
+    | '/snapplus'
     | '/track'
     | '/order/$orderNumber'
     | '/products/$slug'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   CheckoutRoute: typeof CheckoutRoute
+  SnapplusRoute: typeof SnapplusRoute
   TrackRoute: typeof TrackRoute
   OrderOrderNumberRoute: typeof OrderOrderNumberRoute
   ProductsSlugRoute: typeof ProductsSlugRoute
@@ -156,6 +169,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/snapplus': {
+      id: '/snapplus'
+      path: '/snapplus'
+      fullPath: '/snapplus'
+      preLoaderRoute: typeof SnapplusRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/track': {
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   CheckoutRoute: CheckoutRoute,
+  SnapplusRoute: SnapplusRoute,
   TrackRoute: TrackRoute,
   OrderOrderNumberRoute: OrderOrderNumberRoute,
   ProductsSlugRoute: ProductsSlugRoute,
