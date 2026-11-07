@@ -10,28 +10,11 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminRouteImport } from './routes/admin'
-import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as SnapplusRouteImport } from './routes/snapplus'
-import { Route as TrackRouteImport } from './routes/track'
-import { Route as OrderOrderNumberRouteImport } from './routes/order.$orderNumber'
-import { Route as ProductsIndexRouteImport } from './routes/products.index'
-import { Route as ProductsSlugRouteImport } from './routes/products.$slug'
-import { Route as ApiPublicChargilyWebhookRouteImport } from './routes/api/public/chargily-webhook'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AdminRoute = AdminRouteImport.update({
-  id: '/admin',
-  path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CheckoutRoute = CheckoutRouteImport.update({
-  id: '/checkout',
-  path: '/checkout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SnapplusRoute = SnapplusRouteImport.update({
@@ -39,113 +22,31 @@ const SnapplusRoute = SnapplusRouteImport.update({
   path: '/snapplus',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TrackRoute = TrackRouteImport.update({
-  id: '/track',
-  path: '/track',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OrderOrderNumberRoute = OrderOrderNumberRouteImport.update({
-  id: '/order/$orderNumber',
-  path: '/order/$orderNumber',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProductsIndexRoute = ProductsIndexRouteImport.update({
-  id: '/products/',
-  path: '/products/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ProductsSlugRoute = ProductsSlugRouteImport.update({
-  id: '/products/$slug',
-  path: '/products/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicChargilyWebhookRoute =
-  ApiPublicChargilyWebhookRouteImport.update({
-    id: '/api/public/chargily-webhook',
-    path: '/api/public/chargily-webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/checkout': typeof CheckoutRoute
   '/snapplus': typeof SnapplusRoute
-  '/track': typeof TrackRoute
-  '/order/$orderNumber': typeof OrderOrderNumberRoute
-  '/products/$slug': typeof ProductsSlugRoute
-  '/products/': typeof ProductsIndexRoute
-  '/api/public/chargily-webhook': typeof ApiPublicChargilyWebhookRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/checkout': typeof CheckoutRoute
   '/snapplus': typeof SnapplusRoute
-  '/track': typeof TrackRoute
-  '/order/$orderNumber': typeof OrderOrderNumberRoute
-  '/products/$slug': typeof ProductsSlugRoute
-  '/products': typeof ProductsIndexRoute
-  '/api/public/chargily-webhook': typeof ApiPublicChargilyWebhookRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
-  '/checkout': typeof CheckoutRoute
   '/snapplus': typeof SnapplusRoute
-  '/track': typeof TrackRoute
-  '/order/$orderNumber': typeof OrderOrderNumberRoute
-  '/products/$slug': typeof ProductsSlugRoute
-  '/products/': typeof ProductsIndexRoute
-  '/api/public/chargily-webhook': typeof ApiPublicChargilyWebhookRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/admin'
-    | '/checkout'
-    | '/snapplus'
-    | '/track'
-    | '/order/$orderNumber'
-    | '/products/$slug'
-    | '/products/'
-    | '/api/public/chargily-webhook'
+  fullPaths: '/' | '/snapplus'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/admin'
-    | '/checkout'
-    | '/snapplus'
-    | '/track'
-    | '/order/$orderNumber'
-    | '/products/$slug'
-    | '/products'
-    | '/api/public/chargily-webhook'
-  id:
-    | '__root__'
-    | '/'
-    | '/admin'
-    | '/checkout'
-    | '/snapplus'
-    | '/track'
-    | '/order/$orderNumber'
-    | '/products/$slug'
-    | '/products/'
-    | '/api/public/chargily-webhook'
+  to: '/' | '/snapplus'
+  id: '__root__' | '/' | '/snapplus'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
-  CheckoutRoute: typeof CheckoutRoute
   SnapplusRoute: typeof SnapplusRoute
-  TrackRoute: typeof TrackRoute
-  OrderOrderNumberRoute: typeof OrderOrderNumberRoute
-  ProductsSlugRoute: typeof ProductsSlugRoute
-  ProductsIndexRoute: typeof ProductsIndexRoute
-  ApiPublicChargilyWebhookRoute: typeof ApiPublicChargilyWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -157,20 +58,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin': {
-      id: '/admin'
-      path: '/admin'
-      fullPath: '/admin'
-      preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/checkout': {
-      id: '/checkout'
-      path: '/checkout'
-      fullPath: '/checkout'
-      preLoaderRoute: typeof CheckoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/snapplus': {
       id: '/snapplus'
       path: '/snapplus'
@@ -178,54 +65,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SnapplusRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/track': {
-      id: '/track'
-      path: '/track'
-      fullPath: '/track'
-      preLoaderRoute: typeof TrackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/order/$orderNumber': {
-      id: '/order/$orderNumber'
-      path: '/order/$orderNumber'
-      fullPath: '/order/$orderNumber'
-      preLoaderRoute: typeof OrderOrderNumberRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/products/': {
-      id: '/products/'
-      path: '/products'
-      fullPath: '/products/'
-      preLoaderRoute: typeof ProductsIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/products/$slug': {
-      id: '/products/$slug'
-      path: '/products/$slug'
-      fullPath: '/products/$slug'
-      preLoaderRoute: typeof ProductsSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/chargily-webhook': {
-      id: '/api/public/chargily-webhook'
-      path: '/api/public/chargily-webhook'
-      fullPath: '/api/public/chargily-webhook'
-      preLoaderRoute: typeof ApiPublicChargilyWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
-  CheckoutRoute: CheckoutRoute,
   SnapplusRoute: SnapplusRoute,
-  TrackRoute: TrackRoute,
-  OrderOrderNumberRoute: OrderOrderNumberRoute,
-  ProductsSlugRoute: ProductsSlugRoute,
-  ProductsIndexRoute: ProductsIndexRoute,
-  ApiPublicChargilyWebhookRoute: ApiPublicChargilyWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,27 +1,43 @@
-# ch7nli — Gift cards & game top-ups (Algeria)
+# Snapchat+ — Upgrade your Snapchat
 
-Storefront (FR/AR, RTL), checkout via Chargily Pay (Edahabia/CIB), automatic fulfillment via Reloadly, encrypted code storage, Resend emails, and an admin at `/admin`.
+A single-page storefront that showcases Snapchat+ features. Every purchase
+button opens the **official** Snapchat+ page (`https://www.snapchat.com/plus`)
+in a new tab. No payment details are collected here.
 
-## Environment variables (server secrets)
-| Name | Purpose |
-|---|---|
-| `CODES_ENCRYPTION_KEY` | AES-GCM key for delivered codes (already generated) |
-| `CHARGILY_SECRET_KEY` | `test_sk_…` or `live_sk_…`. Without it, orders run in test mode with a "simulate payment" button |
-| `RELOADLY_CLIENT_ID` / `RELOADLY_CLIENT_SECRET` | Reloadly gift-card API. Without them, a mock provider issues `TEST-…` codes |
-| `RELOADLY_SANDBOX` | `false` for production Reloadly (default sandbox) |
-| `RESEND_API_KEY`, `RESEND_FROM` | Code emails (optional) |
+## Routes
 
-## Chargily webhook
-Set the webhook URL in Chargily to `https://<your-domain>/api/public/chargily-webhook`.
+- `/` — Snapchat+ landing page
+- `/snapplus` — redirects to `/`
 
-## Reloadly mapping
-In `/admin → Produits`, fill each denomination's Reloadly product ID and unit price.
+## Stack
 
-## Admin
-The first account created at `/admin` becomes admin automatically.
+- TanStack Start + React 19
+- Tailwind CSS v4 (app shell / error pages)
+- Standalone page assets in `src/snapplus/`
+  - `page.html` — page markup (injected into the route)
+  - `styles.css` — Snapchat-yellow/ink design
+  - `script.js` — sticky header, mobile menu, FAQ accordion, scroll reveals
+  - `favicon.svg` — ghost favicon
 
-## Code layout
-- `src/lib/server/payments.server.ts` — Chargily
-- `src/lib/server/fulfillment.server.ts` — `FulfillmentProvider` interface (Reloadly + mock)
-- `src/lib/server/orders.server.ts` — pay → fulfill → encrypt → email
-- `src/lib/orders.functions.ts` — server functions used by the UI
+## Commands
+
+```bash
+npm install
+npm run dev      # local dev server
+npm run build    # production build
+npm run test     # vitest
+```
+
+## Purchase link
+
+Every "Get Snapchat+", "Subscribe on Snapchat" and footer link points to:
+
+```
+https://www.snapchat.com/plus
+```
+
+## Disclaimer
+
+This is an independent feature guide. It is not affiliated with Snap Inc.
+Snapchat and Snapchat+ are trademarks of Snap Inc. All subscriptions are sold
+by Snapchat itself.
